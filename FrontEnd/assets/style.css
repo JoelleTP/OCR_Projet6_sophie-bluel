@@ -95,9 +95,6 @@ nav li {
 	font-size: 1.2em;
 }
 
-li:hover {
-	color: #B1663C;
-}
 #introduction {
 	display: flex;
 	align-items: center;
@@ -125,6 +122,32 @@ li:hover {
 	text-align: center;
 	margin-bottom: 1em;
 }
+
+/**Ajout de la mise en page des boutons catégories**/
+.filter {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	margin: 50px 0;
+}
+.btn {
+	border-radius: 60px;
+	border: 1px solid #1D6154;
+	color: #1D6154;
+	padding: 9px 20px;
+	background-color: #FFFEF8;
+	font-family: 'Syne';
+	font-weight: 700;
+	font-size: 16px;
+}
+
+.clicked {
+	background-color: #1D6154;
+	color: white;
+}
+
 .gallery {
 	width: 100%;
 	display: grid;
@@ -135,8 +158,8 @@ li:hover {
 
 .gallery img {
 	width: 100%;
-
 }
+
 #contact {
 	width: 50%;
 margin: auto;
@@ -184,5 +207,9 @@ footer nav ul {
 	display: flex;
 	justify-content: flex-end;
 	margin: 2em
+}
+
+.hidden {
+	display: none;
 }
 
