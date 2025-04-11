@@ -9,15 +9,50 @@
 	<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Work+Sans&display=swap" rel="stylesheet">
 	<meta name="description" content="">
 	<link rel="stylesheet" href="./assets/style.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer">
 </head>
 <body>
+	<aside class="modal hidden" aria-hidden="true" role="dialog">
+		<div class="modal__wrapper modal1 modal__stopJs">
+			<button class="modal__closeBtn"><i class="fa-solid fa-xmark"></i></button>
+			<h3>Galerie photo</h3>
+			<div class="modal__minigallery">
+			</div>
+			<button class="submit__btn modal__additionBtn">Ajouter une photo</button>
+		</div>
+		<div class="modal__wrapper modal2 modal__stopJs hidden">
+			<button class="modal2__returntomodal1"><i class="fa-solid fa-arrow-left"></i></button>
+			<button class="modal__closeBtn"><i class="fa-solid fa-xmark"></i></button>
+			<h3>Ajout photo</h3>
+			<form class="modal2__form" action="#" method="post" enctype="multipart/form-data">
+				<div class="photoAddition">
+					<i class="photoAddition__icon fa-regular fa-image"></i>
+					<label for="photoAddition__btn" class="photoAddition__btn">+ Ajouter photo</label>
+					<input type="file" id ="photoAddition__btn" class="hidden" accept="image/*">
+					<p class="photoAddition__type">jpg, png : 4mo max</p>
+					<div class="photoAddition__preview"></div>
+				</div>
+				<label for="title" class="form__label">Titre</label>
+				<input type="text" name="title" id="title" class="title">
+				<label for="category" class="form__label">Catégorie</label>
+				<div class="category__wrapper">
+					<select name="category" id="category">
+						<option value="0"></option>
+					</select>
+					<i class="fa-solid fa-chevron-down"></i>
+				</div>
+			</form>
+			<input class="submit__btn photoAddition__validBtn" type="submit" value="Valider" disabled>
+		</div>
+	</aside>
 <header>
 	<h1>Sophie Bluel <span>Architecte d'intérieur</span></h1>
 	<nav>
 		<ul>
 			<li><a href="index.html#portfolio">projets</a></li>
 			<li><a href="index.html#contact">contact</a></li>
-			<li><a href="login.html">login</a></li>
+			<li class="loginBtn"><a href="login.html">login</a></li>
+			<li class="logoutBtn hidden"><a href="index.html">logout</a></li>
 			<li><a href="#"><img src="./assets/icons/instagram.png" alt="Instagram"></a></li>
 		</ul>
 	</nav>
@@ -51,7 +86,7 @@
 			<input type="email" name="email" id="email">
 			<label for="message">Message</label>
 			<textarea name="message" id="message" cols="30" rows="10"></textarea>
-			<input type="submit" value="Envoyer">
+			<input type="submit" class="submit__btn" value="Envoyer">
 		</form>
 	</section>
 </main>

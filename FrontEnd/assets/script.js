@@ -2,6 +2,9 @@
 let filterarea = document.querySelector(".filter");
 filterarea.innerHTML = `<li data-catid = "all" class = "btn clicked">Tous</li>`;
 
+//Appel des catégories dans la partie select
+let categorySelection = document.getElementById("category");
+
 //Initialisation de la page d'accueil (gallerie et catégorie)
 galleryLoad();
 categoriesLoad();
@@ -19,6 +22,14 @@ async function galleryLoad() {
         `;
         const galleryArea = document.querySelector(".gallery");
         galleryArea.innerHTML += photosGallery;
+        let photosminiGallery = `
+        <figure class="minigallery__photo">
+            <img src="${elements[i].imageUrl}" alt="${elements[i].title}">
+            <button class="minigallery__trash"><i class="fa-solid fa-trash-can"></i></button>
+        </figure>
+        `;
+        const minigalleryArea = document.querySelector(".modal__minigallery");
+        minigalleryArea.innerHTML += photosminiGallery;
     }
 }
 
@@ -48,6 +59,11 @@ async function categoriesLoad() {
         categoriesButton.dataset.catid = `${categories[i].id}`;
         categoriesButton.classList.add("btn");
         filterarea.appendChild(categoriesButton); 
+        let categoryoption = document.createElement("option");
+        categoryoption.value = categories[i].name;
+        categoryoption.textContent = categories[i].name;
+        categoryoption.id = categories[i].id;
+        categorySelection.appendChild(categoryoption);
     }
 }
 
@@ -79,4 +95,99 @@ function filterByCategories(categoriesClicked) {
             figureGalleryArray[i].element.classList.add("hidden");
         }
     }
+}
+
+//Ajout d'éléments sur la page si l'utilisateur est connecté
+const token = window.localStorage.getItem("token");
+let body = document.querySelector("body");
+let login = document.querySelector(".loginBtn");
+let logout = document.querySelector(".logoutBtn");
+let project = document.querySelector("#portfolio h2");
+if (token !== null) {
+    let editionMenu = `
+        <div class="editionMenu">
+            <i class="fa-regular fa-pen-to-square"></i>
+            <p>Mode édition</p>
+        </div>`; 
+    body.insertAdjacentHTML("afterbegin", editionMenu);
+    login.classList.add("hidden");
+    logout.classList.remove("hidden");
+    let editbutton = `
+        <button class="editbutton">
+            <i class="fa-regular fa-pen-to-square"></i>
+            <p>modifier</p>
+        </button>`;
+    project.insertAdjacentHTML("afterend", editbutton);
+    filterarea.classList.add("hidden");
+}
+
+
+//Suppression du token lorsque l'on clique sur logout
+logout.addEventListener("click", () => {
+    token = window.localStorage.removeItem("token");
+})
+
+//Mise en place de l'ouverture et de la fermeture de la modale
+let modalstep = null;
+let modalOpening = document.querySelector(".editbutton");
+let modal = document.querySelector(".modal");
+let modalClosing = document.querySelectorAll(".modal__closeBtn");
+let modalStop = document.querySelectorAll(".modal__stopJs"); 
+let modalArrow = document.querySelector(".modal2__returntomodal1");
+modalOpening.addEventListener("click", openModal);
+
+//Fonction ouverture de la modale
+function openModal() {
+    modal.classList.remove("hidden");
+    modal.removeAttribute("aria-hidden");
+    modal.setAttribute("aria-modal", "true");
+    modalstep = modal;
+    modalstep.addEventListener("click", closeModal);
+    modalStop.forEach(btn => {
+        btn.addEventListener("click", stopPropagation);
+    })
+    modalClosing.forEach(btn => {
+        btn.addEventListener("click", closeModal);
+    })
+}
+
+//Fermeture de la modale
+function closeModal() {
+    if (modalstep === null) return;
+    modal.classList.add("hidden");
+    modal.setAttribute("aria-hidden", "true");
+    modal.removeAttribute("aria-modal");
+    modalstep.removeEventListener("click", closeModal);
+    modalStop.forEach(btn => {
+        btn.removeEventListener("click", stopPropagation);
+    })
+    modalstep = null;
+    modalClosing.forEach(btn => {
+        btn.removeEventListener("click", closeModal);
+    })
+    closeModal2();
+}
+
+//Empêcher la propagation à la modal__wrapper pour que la modale ne se ferme pas quand on appuie dessus
+function stopPropagation(e) {
+    e.stopPropagation();
+}
+
+//Quand on appuie sur le bouton "Ajouter photo" de la première modale, on fait apparaître la deuxième page (modal2)
+let modal2opening = document.querySelector(".modal__additionBtn");
+let modal2 = document.querySelector(".modal2");
+let modal1 = document.querySelector(".modal1");
+const modal2Form = document.querySelector(".modal2__form");
+modal2opening.addEventListener("click", openModal2);
+modalArrow.addEventListener("click", closeModal2);
+
+function openModal2() {
+    modal2.classList.remove("hidden");
+    modal1.classList.add("hidden");
+}
+
+function closeModal2() {
+    modal2.classList.add("hidden");
+    modal1.classList.remove("hidden");
+    modal2Form.reset();
 }
