@@ -352,7 +352,6 @@ footer nav ul {
 	border-bottom: 1px solid #B3B3B3;
 }
 
-/**à revérifier***/
 .minigallery__photo {
 	position: relative;
 }
@@ -379,8 +378,6 @@ footer nav ul {
 .mini-gallery__trash i {
 	font-size: 9px;
 }
-
-/**à revérifier***/
 
 .modal2__returntomodal1 {
 	border: none;

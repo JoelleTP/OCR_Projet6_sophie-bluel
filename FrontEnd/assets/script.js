@@ -15,7 +15,7 @@ async function galleryLoad() {
     const elements = await response.json();
     for (let i=0; i<elements.length; i++) {
         let photosGallery = `
-        <figure data-catid = "${elements[i].categoryId}">
+        <figure data-id = "${elements[i].id}" data-catid = "${elements[i].categoryId}">
             <img src="${elements[i].imageUrl}" alt="${elements[i].title}">
             <figcaption>${elements[i].title}</figcaption>
         </figure>
@@ -23,9 +23,9 @@ async function galleryLoad() {
         const galleryArea = document.querySelector(".gallery");
         galleryArea.innerHTML += photosGallery;
         let photosminiGallery = `
-        <figure class="minigallery__photo">
+        <figure class="minigallery__photo" data-id = "${elements[i].id}">
             <img src="${elements[i].imageUrl}" alt="${elements[i].title}">
-            <button class="minigallery__trash"><i class="fa-solid fa-trash-can"></i></button>
+            <button class="minigallery__trash"><i class="fa-solid fa-trash-can" data-id = "${elements[i].id}"></i></button>
         </figure>
         `;
         const minigalleryArea = document.querySelector(".modal__minigallery");
@@ -149,6 +149,7 @@ function openModal() {
     modalClosing.forEach(btn => {
         btn.addEventListener("click", closeModal);
     })
+    trashbuttonselector();
 }
 
 //Fermeture de la modale
@@ -190,4 +191,45 @@ function closeModal2() {
     modal2.classList.add("hidden");
     modal1.classList.remove("hidden");
     modal2Form.reset();
+}
+
+//Quand on appuie sur la poubelle, on doit supprimer l'image concernée de la minigallery et de la gallery avec un appel à l'API concernée
+function trashbuttonselector() {
+    let trashbuttons = document.querySelectorAll(".fa-trash-can");
+    trashbuttons.forEach(btn => {
+        btn.addEventListener("click", (event) => {
+            let idphoto = event.target.dataset.id;
+            const confirmation = confirm("Attention, cette action est définitive. Etes-vous sûre de vouloir supprimer cette photo ?");
+            if (confirmation) {
+                deletePhoto(idphoto);
+            }            
+        })
+    })
+}
+
+//Fonction d'appel à l'API pour supprimer une photo
+async function deletePhoto(idphoto) {
+    const response = await fetch(`http://localhost:5678/api/works/${idphoto}`, {
+        method: "DELETE",
+        headers: {'Authorization': `Bearer ${token}`}
+    });
+    if (response.ok) {
+        alert ("L'image a bien été supprimée");
+        windowdeletionPhoto(idphoto);        
+    }
+    else {
+        alert("Erreur : vous n'êtes pas autorisé à supprimer cette photo");
+    }
+}
+
+//Fonction permettant de supprimer la photo de l'écran avant le rechargement de la page
+function windowdeletionPhoto(idphoto) {
+    const galleryPhoto = document.querySelectorAll(".gallery figure");
+    const minigalleryPhoto = document.querySelectorAll(".minigallery__photo");
+    for (let i=0; i<=idphoto; i++){
+        if ((galleryPhoto[i].dataset.id === idphoto)) {
+            galleryPhoto[i].classList.add("hidden");
+            minigalleryPhoto[i].classList.add("hidden");
+        }
+    }
 }
