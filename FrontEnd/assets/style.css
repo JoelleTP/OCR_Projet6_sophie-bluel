@@ -381,7 +381,6 @@ footer nav ul {
 
 .modal2__returntomodal1 {
 	border: none;
-	
 	background-color: white;
 	position: absolute;
 	top: 32px;
@@ -465,7 +464,7 @@ footer nav ul {
 
 .photoAddition__preview {
 	position: absolute;
-	width: 45%;
+	max-width: 45%;
 	top: 0;
 	left: 50%;
 	transform: translateX(-50%);

@@ -14,23 +14,28 @@ async function galleryLoad() {
     const response = await fetch('http://localhost:5678/api/works/');
     const elements = await response.json();
     for (let i=0; i<elements.length; i++) {
-        let photosGallery = `
-        <figure data-id = "${elements[i].id}" data-catid = "${elements[i].categoryId}">
-            <img src="${elements[i].imageUrl}" alt="${elements[i].title}">
-            <figcaption>${elements[i].title}</figcaption>
-        </figure>
-        `;
-        const galleryArea = document.querySelector(".gallery");
-        galleryArea.innerHTML += photosGallery;
-        let photosminiGallery = `
-        <figure class="minigallery__photo" data-id = "${elements[i].id}">
-            <img src="${elements[i].imageUrl}" alt="${elements[i].title}">
-            <button class="minigallery__trash"><i class="fa-solid fa-trash-can" data-id = "${elements[i].id}"></i></button>
-        </figure>
-        `;
-        const minigalleryArea = document.querySelector(".modal__minigallery");
-        minigalleryArea.innerHTML += photosminiGallery;
+        loadPhoto(elements[i].title, elements[i].imageUrl, elements[i].categoryId, elements[i].id);
     }
+}
+
+//Fonction permettant de charger une photo en fonction de son titre et sa catégorie
+function loadPhoto(newTitle, newimage, newCategory, newid) {
+    let photosGallery = `
+    <figure data-id = "${newid}" data-catid = "${newCategory}">
+        <img src="${newimage}" alt="${newTitle}">
+        <figcaption>${newTitle}</figcaption>
+    </figure>
+    `;
+    const galleryArea = document.querySelector(".gallery");
+    galleryArea.innerHTML += photosGallery;
+    let photosminiGallery = `
+        <figure class="minigallery__photo" data-id="${newid}">
+            <img src="${newimage}" alt="${newTitle}">
+            <button class="minigallery__trash"><i class="fa-solid fa-trash-can" data-id="${newid}"></i></button>
+        </figure>
+        `;
+    const minigalleryArea = document.querySelector(".modal__minigallery");
+    minigalleryArea.innerHTML += photosminiGallery;
 }
 
 //Récupération des catégories et vérification des doublons
@@ -179,6 +184,7 @@ let modal2opening = document.querySelector(".modal__additionBtn");
 let modal2 = document.querySelector(".modal2");
 let modal1 = document.querySelector(".modal1");
 const modal2Form = document.querySelector(".modal2__form");
+let photopreview = document.querySelector(".photoAddition__preview");
 modal2opening.addEventListener("click", openModal2);
 modalArrow.addEventListener("click", closeModal2);
 
@@ -191,6 +197,7 @@ function closeModal2() {
     modal2.classList.add("hidden");
     modal1.classList.remove("hidden");
     modal2Form.reset();
+    photopreview.removeChild(photopreview.firstChild);
 }
 
 //Quand on appuie sur la poubelle, on doit supprimer l'image concernée de la minigallery et de la gallery avec un appel à l'API concernée
@@ -233,3 +240,101 @@ function windowdeletionPhoto(idphoto) {
         }
     }
 }
+
+//Quand on appuie sur le bouton "Ajout photo" de la deuxième, on peut ajouter la photo
+let input = document.getElementById("photoAddition__btn");
+let curFiles;
+input.addEventListener("change", openPhoto);
+
+function openPhoto() {
+    while (photopreview.firstChild) {
+        photopreview.removeChild(photopreview.firstChild);
+    }
+    curFiles = input.files;
+    if ((curFiles.length !== 0) && (curFiles[0].size < 4000000) && validFiles(curFiles[0])) {
+        let newImage = document.createElement("img");
+        newImage.src = window.URL.createObjectURL(curFiles[0]);
+        newImage.alt = `${curFiles[0].name}`; 
+        photopreview.appendChild(newImage);
+    }
+    else {
+        alert("Le fichier choisi n'est pas un fichier valide, merci d'importer une autre image");
+    }
+}
+
+function validFiles(file) {
+    let fileTypes = ["image/jpeg", "image/pjpeg", "image/png"];
+    for (let i=0; i<fileTypes.length; i++) {
+        if (file.type === fileTypes[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+//Quand on remplit tous les champs, le bouton validé devient vert et est cliquable, sinon alert de l'utilisateur
+let photosubmitbtn = document.querySelector(".photoAddition__validBtn");
+let formData = new FormData();
+modal2Form.addEventListener("change", changeBtnValid);
+photosubmitbtn.addEventListener("click", newWorkupdate);
+
+function changeBtnValid() {
+    let title = document.querySelector(".title");
+    let newimage = document.querySelector(".photoAddition__preview img");
+    let newTitle = title.value;
+    let newCategory = categorySelection.options[categorySelection.selectedIndex].id;
+    if ((newimage !== null) && validForm(newTitle) && (newCategory !== "")) {
+        photosubmitbtn.disabled = false;
+    }
+    else {
+        photosubmitbtn.disabled = true;
+    }
+}
+
+function newWorkupdate(event) {
+    event.preventDefault();
+    let title = document.querySelector(".title");
+    let newimage = input.files[0];
+    let newTitle = title.value;
+    let newCategory = categorySelection.options[categorySelection.selectedIndex].id;
+    if ((newimage !== null) && validForm(newTitle) && (newCategory !== "")) {
+        formData.append("title", newTitle);
+        formData.append("image", newimage);
+        formData.append("category", newCategory);
+        photoAddition(formData);
+    }
+    else {
+        alert("merci de remplir tous les champs")
+    }
+}
+    
+function validForm(i) {
+    if (i.length > 0) {
+        return true;
+    }
+    return false;
+}
+
+//Quand on clique sur valider, cela ajoute la photo dans la gallerie et la mini-gallerie. 
+async function photoAddition(formData) {
+    const response = await fetch("http://localhost:5678/api/works", {
+        method: "POST",
+        headers: {authorization: `Bearer ${token}`},
+        body: formData       
+    });
+    const photoAdditionValid = await response.json(); 
+    if (response.status === 401) {
+        alert("l'utilisateur n'est pas autorisé à rajouter une image");
+        closeModal();
+    }
+    else if (response.status === 201) {
+        alert("La photo a bien été ajouté");
+        closeModal();
+        loadPhoto(photoAdditionValid.title, photoAdditionValid.imageUrl, photoAdditionValid.categoryId, photoAdditionValid.id);
+    }
+    else {
+        alert("Une erreur s'est produite, veuillez recommencer");
+    }
+}
+        
