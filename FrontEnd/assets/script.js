@@ -1,69 +1,121 @@
-//Création du bouton tous
-let filterarea = document.querySelector(".filter");
-filterarea.innerHTML = `<li data-catid = "all" class = "btn clicked">Tous</li>`;
+//Définition des variables générales
+const token = sessionStorage.getItem("token");
+const filterarea = document.querySelector(".filter");
+const categorySelection = document.getElementById("category");
+const modal = document.querySelector(".modal");
+const modal2 = document.querySelector(".modal2");
+const modal1 = document.querySelector(".modal1");
+const photopreview = document.querySelector(".photoAddition__preview");
+const input = document.getElementById("photoAddition__btn");
+const photosubmitbtn = document.querySelector(".photoAddition__validBtn");
+let modalstep = null;
+let newImage;
+let newTitle;
+let newCategory;
+let formData = new FormData();
 
-//Appel des catégories dans la partie select
-let categorySelection = document.getElementById("category");
-
-//Initialisation de la page d'accueil (gallerie et catégorie)
+//Initialisation de la gallerie de la page d'accueil
 galleryLoad();
-categoriesLoad();
+
+//Chargements des fonctionnalités du site en fonction de la connexion de l'utilisateur
+if (token !== null) {
+    editionPage();
+    categoriesSelect();
+    document.querySelector(".logoutBtn").addEventListener("click", tokenRemoval);
+    document.querySelector(".editbutton").addEventListener("click", () => {
+        openModal();
+        trashbuttonselector();
+    })
+    document.querySelector(".modal__additionBtn").addEventListener("click", openModal2);
+    document.querySelector(".modal2__returntomodal1").addEventListener("click", closeModal2);
+    input.addEventListener("change", openPhoto);
+    document.querySelector(".modal2__form").addEventListener("change", changeBtnValid);
+    photosubmitbtn.addEventListener("click", newWorkupdate);
+}
+else {
+    filterarea.innerHTML = `<li data-catid = "all" class = "btn clicked">Tous</li>`;
+    categoriesLoad();
+    filterarea.addEventListener("click", categoriesfilter);
+}
+
+
 
 //Fonction permettant de récupérer les données de l'API (images et textes)
 async function galleryLoad() {
-    const response = await fetch('http://localhost:5678/api/works/');
-    const elements = await response.json();
-    for (let i=0; i<elements.length; i++) {
-        loadPhoto(elements[i].title, elements[i].imageUrl, elements[i].categoryId, elements[i].id);
-    }
+    try {
+        const response = await fetch('http://localhost:5678/api/works/');
+        const elements = await response.json();
+        if (!elements) return false;
+        for (let i=0; i<elements.length; i++) {
+            loadPhoto(elements[i].title, elements[i].imageUrl, elements[i].categoryId, elements[i].id);
+        }
+    } catch {
+        alert("L'API ne répond pas");
+        return false;
+    }  
 }
 
-//Fonction permettant de charger une photo en fonction de son titre et sa catégorie
-function loadPhoto(newTitle, newimage, newCategory, newid) {
+//Fonction permettant de charger une photo de la gallerie et de la mini-gallerie en fonction de son titre et sa catégorie
+function loadPhoto(newTitle, newImage, newCategory, newid) {
     let photosGallery = `
     <figure data-id = "${newid}" data-catid = "${newCategory}">
-        <img src="${newimage}" alt="${newTitle}">
+        <img src="${newImage}" alt="${newTitle}">
         <figcaption>${newTitle}</figcaption>
     </figure>
     `;
     const galleryArea = document.querySelector(".gallery");
     galleryArea.innerHTML += photosGallery;
     let photosminiGallery = `
-        <figure class="minigallery__photo" data-id="${newid}">
-            <img src="${newimage}" alt="${newTitle}">
-            <button class="minigallery__trash"><i class="fa-solid fa-trash-can" data-id="${newid}"></i></button>
-        </figure>
-        `;
+    <figure class="minigallery__photo" data-id="${newid}">
+        <img src="${newImage}" alt="${newTitle}">
+        <button class="minigallery__trash"><i class="fa-solid fa-trash-can" data-id="${newid}"></i></button>
+    </figure>
+    `;
     const minigalleryArea = document.querySelector(".modal__minigallery");
     minigalleryArea.innerHTML += photosminiGallery;
 }
 
-//Récupération des catégories et vérification des doublons
+//Fonction permettant de récupérer les catégories de l'API et suppression des doublons
 async function getUniqueCategories() {
-    const categoriesResponse = await fetch('http://localhost:5678/api/categories');
-    let categories = await categoriesResponse.json()
-    let categoriesChecked = new Set();
-    let uniqueCategories = categories.filter(category => {
-        if (categoriesChecked.has(category.name)) {
-            return false;
-        }
-        else {
-            categoriesChecked.add(category.name);
-            return true;
-        }
-    })
-    return uniqueCategories;
+    try {
+        const categoriesResponse = await fetch('http://localhost:5678/api/categories');
+        let categories = await categoriesResponse.json()
+        if(!categories) return false;
+        let categoriesChecked = new Set();
+        let uniqueCategories = categories.filter(category => {
+            if (categoriesChecked.has(category.name)) {
+                return false;
+            }
+            else {
+                categoriesChecked.add(category.name);
+                return true;
+            }
+        })
+        return uniqueCategories;
+    } catch {
+        alert("L'API ne répond pas");
+        return false;
+    }
 }
 
-//Chargement des catégories en bouton et filtre des images par catégories
+//Fonction pour générer les boutons de filtres sur la page d'accueil
 async function categoriesLoad() {
     let categories = await getUniqueCategories();
+    if (!categories) return false;
     for (let i=0; i<categories.length; i++) {
         let categoriesButton = document.createElement("li");
         categoriesButton.textContent = categories[i].name;
         categoriesButton.dataset.catid = `${categories[i].id}`;
         categoriesButton.classList.add("btn");
         filterarea.appendChild(categoriesButton); 
+    }
+}
+
+//Fonction pour générer la sélection de catégories lors de l'ajout de photo dans la modale
+async function categoriesSelect() {
+    let categories = await getUniqueCategories();
+    if (!categories) return false;
+    for (let i=0; i<categories.length; i++) {
         let categoryoption = document.createElement("option");
         categoryoption.value = categories[i].name;
         categoryoption.textContent = categories[i].name;
@@ -72,9 +124,8 @@ async function categoriesLoad() {
     }
 }
 
-
-//Permet de récupérer le clic sur le bouton et de lancer la fonction filtrée. 
-filterarea.addEventListener("click", (event) => {
+//Permet de récupérer le clic sur les boutons tous et catégories et de lancer la fonction filtrée. 
+function categoriesfilter(event) {
     if (event.target.tagName === "LI") {
         document.querySelectorAll(".btn").forEach(btn => {
             btn.classList.remove("clicked");
@@ -83,7 +134,7 @@ filterarea.addEventListener("click", (event) => {
         let categoriesClicked = event.target.dataset.catid;
         filterByCategories(categoriesClicked);
     }
-}) 
+} 
 
 //Fonction permettant de filtrer selon la catégorie
 function filterByCategories(categoriesClicked) { 
@@ -102,107 +153,88 @@ function filterByCategories(categoriesClicked) {
     }
 }
 
-//Ajout d'éléments sur la page si l'utilisateur est connecté
-const token = window.localStorage.getItem("token");
-let body = document.querySelector("body");
-let login = document.querySelector(".loginBtn");
-let logout = document.querySelector(".logoutBtn");
-let project = document.querySelector("#portfolio h2");
-if (token !== null) {
-    let editionMenu = `
-        <div class="editionMenu">
-            <i class="fa-regular fa-pen-to-square"></i>
-            <p>Mode édition</p>
-        </div>`; 
+//Fonction permettant d'ajouter le menu d'édition sur la page d'accueil lorsque l'utilisateur est connecté
+function editionPage() {
+    const editionMenu = `
+    <div class="editionMenu">
+        <i class="fa-regular fa-pen-to-square"></i>
+        <p>Mode édition</p>
+    </div>`; 
+    const body = document.querySelector("body");
     body.insertAdjacentHTML("afterbegin", editionMenu);
-    login.classList.add("hidden");
-    logout.classList.remove("hidden");
-    let editbutton = `
+    const editbutton = `
         <button class="editbutton">
             <i class="fa-regular fa-pen-to-square"></i>
             <p>modifier</p>
         </button>`;
+    const project = document.querySelector("#portfolio h2");
     project.insertAdjacentHTML("afterend", editbutton);
-    filterarea.classList.add("hidden");
+    const login = document.querySelector(".loginBtn");
+    login.classList.add("hidden");
+    document.querySelector(".logoutBtn").classList.remove("hidden");
+}
+
+//Fonction permettant de se déconnecter
+function tokenRemoval(token) {
+    const confirmation = confirm("Attention, vous allez être déconnecté. Merci de confirmer.");
+        if (confirmation) {
+            token = sessionStorage.removeItem("token");
+            return token;
+        }            
 }
 
 
-//Suppression du token lorsque l'on clique sur logout
-logout.addEventListener("click", () => {
-    token = window.localStorage.removeItem("token");
-})
-
-//Mise en place de l'ouverture et de la fermeture de la modale
-let modalstep = null;
-let modalOpening = document.querySelector(".editbutton");
-let modal = document.querySelector(".modal");
-let modalClosing = document.querySelectorAll(".modal__closeBtn");
-let modalStop = document.querySelectorAll(".modal__stopJs"); 
-let modalArrow = document.querySelector(".modal2__returntomodal1");
-modalOpening.addEventListener("click", openModal);
-
-//Fonction ouverture de la modale
+//Fonction permettant l'ouverture de la modale
 function openModal() {
+    if (modalstep !== null) return;
     modal.classList.remove("hidden");
     modal.removeAttribute("aria-hidden");
     modal.setAttribute("aria-modal", "true");
     modalstep = modal;
     modalstep.addEventListener("click", closeModal);
-    modalStop.forEach(btn => {
+    document.querySelectorAll(".modal__stopJs").forEach(btn => {
         btn.addEventListener("click", stopPropagation);
     })
-    modalClosing.forEach(btn => {
+    document.querySelectorAll(".modal__closeBtn").forEach(btn => {
         btn.addEventListener("click", closeModal);
     })
-    trashbuttonselector();
 }
 
-//Fermeture de la modale
+//Fonction permettant la fermeture de la modale
 function closeModal() {
     if (modalstep === null) return;
     modal.classList.add("hidden");
     modal.setAttribute("aria-hidden", "true");
     modal.removeAttribute("aria-modal");
-    modalstep.removeEventListener("click", closeModal);
-    modalStop.forEach(btn => {
-        btn.removeEventListener("click", stopPropagation);
-    })
     modalstep = null;
-    modalClosing.forEach(btn => {
-        btn.removeEventListener("click", closeModal);
-    })
     closeModal2();
 }
 
-//Empêcher la propagation à la modal__wrapper pour que la modale ne se ferme pas quand on appuie dessus
+//Fonction permettant d'empêcher la propagation à la modal__wrapper (1 et 2) pour que la modale ne se ferme pas quand on clique dessus
 function stopPropagation(e) {
     e.stopPropagation();
 }
 
-//Quand on appuie sur le bouton "Ajouter photo" de la première modale, on fait apparaître la deuxième page (modal2)
-let modal2opening = document.querySelector(".modal__additionBtn");
-let modal2 = document.querySelector(".modal2");
-let modal1 = document.querySelector(".modal1");
-const modal2Form = document.querySelector(".modal2__form");
-let photopreview = document.querySelector(".photoAddition__preview");
-modal2opening.addEventListener("click", openModal2);
-modalArrow.addEventListener("click", closeModal2);
-
+//Fonction permettant l'ouverture de la deuxième page de la modale
 function openModal2() {
     modal2.classList.remove("hidden");
     modal1.classList.add("hidden");
 }
 
+//Fonction permettant la fermeture de la deuxième page de la modale
 function closeModal2() {
     modal2.classList.add("hidden");
     modal1.classList.remove("hidden");
-    modal2Form.reset();
-    photopreview.removeChild(photopreview.firstChild);
+    document.querySelector(".modal2__form").reset();
+    if (photopreview.firstChild) {
+        photopreview.removeChild(photopreview.firstChild);
+    }
+    photosubmitbtn.disabled = true;
 }
 
-//Quand on appuie sur la poubelle, on doit supprimer l'image concernée de la minigallery et de la gallery avec un appel à l'API concernée
+//Fonction permettant de sélectionner l'image à supprimer dans la mini-gallerie
 function trashbuttonselector() {
-    let trashbuttons = document.querySelectorAll(".fa-trash-can");
+    let trashbuttons = document.querySelectorAll(".fa-trash-can"); 
     trashbuttons.forEach(btn => {
         btn.addEventListener("click", (event) => {
             let idphoto = event.target.dataset.id;
@@ -214,56 +246,56 @@ function trashbuttonselector() {
     })
 }
 
-//Fonction d'appel à l'API pour supprimer une photo
+//Fonction d'appel à l'API pour supprimer la photo sélectionnée
 async function deletePhoto(idphoto) {
-    const response = await fetch(`http://localhost:5678/api/works/${idphoto}`, {
-        method: "DELETE",
-        headers: {'Authorization': `Bearer ${token}`}
-    });
-    if (response.ok) {
-        alert ("L'image a bien été supprimée");
-        windowdeletionPhoto(idphoto);        
-    }
-    else {
-        alert("Erreur : vous n'êtes pas autorisé à supprimer cette photo");
-    }
-}
-
-//Fonction permettant de supprimer la photo de l'écran avant le rechargement de la page
-function windowdeletionPhoto(idphoto) {
-    const galleryPhoto = document.querySelectorAll(".gallery figure");
-    const minigalleryPhoto = document.querySelectorAll(".minigallery__photo");
-    for (let i=0; i<=idphoto; i++){
-        if ((galleryPhoto[i].dataset.id === idphoto)) {
-            galleryPhoto[i].classList.add("hidden");
-            minigalleryPhoto[i].classList.add("hidden");
+    try {
+        const response = await fetch(`http://localhost:5678/api/works/${idphoto}`, {
+            method: "DELETE",
+            headers: {'Authorization': `Bearer ${token}`}
+        });
+        if(!response.ok) {
+            alert("Erreur : vous n'êtes pas autorisé à supprimer cette photo");
+            return false;
         }
-    }
+        alert ("L'image a bien été supprimée");
+        windowdeletionPhoto(idphoto, document.querySelectorAll(".minigallery__photo")); 
+        windowdeletionPhoto(idphoto, document.querySelectorAll(".gallery figure")); 
+    } catch {
+        alert("L'API ne répond pas");
+        return false;
+    } 
 }
 
-//Quand on appuie sur le bouton "Ajout photo" de la deuxième, on peut ajouter la photo
-let input = document.getElementById("photoAddition__btn");
-let curFiles;
-input.addEventListener("change", openPhoto);
+//Fonction permettant de cacher la photo supprimée dans la gallerie et la mini-gallerie avant le rechargement de la page d'accueil
+function windowdeletionPhoto(idphoto, selector) {
+    selector.forEach(function (photo) {
+        if (photo.dataset.id === idphoto) {
+            photo.classList.add("hidden");
+        }
+    })
+}
 
+//Fonction permettant de prévisualiser la nouvelle image choisie dans la deuxième page de la modale avant de l'ajouter
 function openPhoto() {
-    while (photopreview.firstChild) {
+    if (photopreview.firstChild) {
         photopreview.removeChild(photopreview.firstChild);
     }
-    curFiles = input.files;
-    if ((curFiles.length !== 0) && (curFiles[0].size < 4000000) && validFiles(curFiles[0])) {
-        let newImage = document.createElement("img");
-        newImage.src = window.URL.createObjectURL(curFiles[0]);
-        newImage.alt = `${curFiles[0].name}`; 
-        photopreview.appendChild(newImage);
-    }
-    else {
+    let imgFiles = input.files;
+    if (!imgFiles) return false;
+    if (imgFiles.length === 0) return false;
+    if ((imgFiles[0].size >= 4000000) || (!validFiles(imgFiles[0]))) {
         alert("Le fichier choisi n'est pas un fichier valide, merci d'importer une autre image");
+        return false;
     }
+    let imagePreview = document.createElement("img");
+    imagePreview.src = window.URL.createObjectURL(imgFiles[0]);
+    imagePreview.alt = `${imgFiles[0].name}`; 
+    photopreview.appendChild(imagePreview);
 }
 
+//Fonction permettant de vérifier que le format de l'image est accepté
 function validFiles(file) {
-    let fileTypes = ["image/jpeg", "image/pjpeg", "image/png"];
+    let fileTypes = ["image/jpeg", "image/jpg", "image/png"];
     for (let i=0; i<fileTypes.length; i++) {
         if (file.type === fileTypes[i]) {
             return true;
@@ -272,69 +304,60 @@ function validFiles(file) {
     return false;
 }
 
-
-//Quand on remplit tous les champs, le bouton validé devient vert et est cliquable, sinon alert de l'utilisateur
-let photosubmitbtn = document.querySelector(".photoAddition__validBtn");
-let formData = new FormData();
-modal2Form.addEventListener("change", changeBtnValid);
-photosubmitbtn.addEventListener("click", newWorkupdate);
-
+//Fonction permettant de rendre le bouton Valider valide en fonction du remplissage du formulaire
 function changeBtnValid() {
-    let title = document.querySelector(".title");
-    let newimage = document.querySelector(".photoAddition__preview img");
-    let newTitle = title.value;
-    let newCategory = categorySelection.options[categorySelection.selectedIndex].id;
-    if ((newimage !== null) && validForm(newTitle) && (newCategory !== "")) {
-        photosubmitbtn.disabled = false;
-    }
-    else {
+    if (!completionForm()) {
         photosubmitbtn.disabled = true;
+        return false;
     }
+    photosubmitbtn.disabled = false;
 }
 
+//Fonction permettant de vérifier que le formulaire de la deuxième page de la modale est entièrement complétée et de modifier le bouton Valider
+function completionForm() {
+    newTitle = document.querySelector(".title").value;
+    newImage = input.files[0];
+    newCategory = categorySelection.options[categorySelection.selectedIndex].id;
+    if(!newTitle) return false;
+    if(!newImage) return false;
+    if(!newCategory) return false;
+    return true;    
+}
+
+//Fonction permettant d'ajouter une nouvelle photo
 function newWorkupdate(event) {
     event.preventDefault();
-    let title = document.querySelector(".title");
-    let newimage = input.files[0];
-    let newTitle = title.value;
-    let newCategory = categorySelection.options[categorySelection.selectedIndex].id;
-    if ((newimage !== null) && validForm(newTitle) && (newCategory !== "")) {
+    const confirmation = confirm("Voulez-vous vraiment rajouter cette photo ?");
+    if (confirmation) {
         formData.append("title", newTitle);
-        formData.append("image", newimage);
+        formData.append("image", newImage);
         formData.append("category", newCategory);
         photoAddition(formData);
-    }
-    else {
-        alert("merci de remplir tous les champs")
+        formData = new FormData(); //réinitialisation de formData pour pouvoir ensuite ajouter de nouvelles photos
     }
 }
     
-function validForm(i) {
-    if (i.length > 0) {
-        return true;
-    }
-    return false;
-}
-
-//Quand on clique sur valider, cela ajoute la photo dans la gallerie et la mini-gallerie. 
+//Fonction pour ajouter une nouvelle photo dans l'API et la charger directement sur la page avec les informations récupérées
 async function photoAddition(formData) {
-    const response = await fetch("http://localhost:5678/api/works", {
-        method: "POST",
-        headers: {authorization: `Bearer ${token}`},
-        body: formData       
-    });
-    const photoAdditionValid = await response.json(); 
-    if (response.status === 401) {
-        alert("l'utilisateur n'est pas autorisé à rajouter une image");
-        closeModal();
-    }
-    else if (response.status === 201) {
-        alert("La photo a bien été ajouté");
+    try {
+        const response = await fetch("http://localhost:5678/api/works", {
+            method: "POST",
+            headers: {authorization: `Bearer ${token}`},
+            body: formData       
+        });
+        const photoAdditionValid = await response.json();
+        if (!photoAdditionValid) return false;
+        if (response.status!==201) {
+            alert("Cette photo n'a pas pu être ajoutée, veuillez réessayer ou vous déconnecter/reconnecter");
+            return false;
+        } 
+        alert("La photo a bien été ajoutée");
         closeModal();
         loadPhoto(photoAdditionValid.title, photoAdditionValid.imageUrl, photoAdditionValid.categoryId, photoAdditionValid.id);
-    }
-    else {
-        alert("Une erreur s'est produite, veuillez recommencer");
+        return true;
+    } catch {
+        alert("L'API ne répond pas");
+        return false;
     }
 }
         

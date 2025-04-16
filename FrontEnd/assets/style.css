@@ -69,7 +69,8 @@ main {
 	margin: auto;
 }
 section {
-	margin: 50px 0
+	margin: 50px auto;
+	max-width: 950px;
 }
 
 h1{
@@ -110,6 +111,7 @@ nav li img {
 	width: 20px;
 }
 
+.loginBtn--bold,
 header nav li:hover {
 	font-weight: 700;
 }
@@ -145,14 +147,16 @@ header nav li:hover {
 .gallery {
 	width: 100%;
 	display: grid;
-	grid-template-columns: 1fr 1fr 1fr;
-	grid-column-gap: 20px;
-	grid-row-gap: 20px;
+	grid-template-columns: repeat(3, 1fr);
+	grid-column-gap: 18px;
+	grid-row-gap: 16px;
 	padding-top: 50px;
 }
 
 .gallery img {
 	width: 100%;
+	height: 407px;
+	object-fit: cover;
 }
 
 .forms {
@@ -174,7 +178,7 @@ header nav li:hover {
 	flex-direction: column;
 }
 
-.forms input {
+.input {
 	height: 50px;
 	font-size: 1.2em;
 	border: none;
@@ -194,12 +198,13 @@ header nav li:hover {
 	font-weight: 700;
 	color: white;
 	background-color: #1D6154;
-	margin : 2em auto ;
+	margin : 3em auto ;
 	width: 180px;
 	text-align: center;
 	border-radius: 60px;
 	display: block;
 	border: none;
+	padding: 9px 0;
 }
 
 footer {
@@ -214,7 +219,11 @@ footer nav {
 footer nav ul {
 	display: flex;
 	justify-content: flex-end;
-	padding: 2em;
+	padding: 2em 0;
+}
+
+footer li {
+	padding: 0;
 }
 
 /**Ajout de la mise en page des boutons catégories**/
@@ -229,11 +238,13 @@ footer nav ul {
 	border-radius: 60px;
 	border: 1px solid #1D6154;
 	color: #1D6154;
-	padding: 9px 20px;
+	padding: 9px;
+	min-width: 7ch;
 	background-color: #FFFEF8;
 	font-family: 'Syne';
 	font-weight: 700;
 	font-size: 16px;
+	text-align: center;
 }
 
 .clicked {
@@ -275,7 +286,9 @@ footer nav ul {
 .editbutton {
 	position: absolute;
 	top: 0.6em;
-	left: 65%;
+	left: 50%;
+	transform: translateX(-50%);
+	margin-left: 155px;
 	display: flex;
 	flex-direction: row;
 	text-decoration: none;
@@ -301,7 +314,7 @@ footer nav ul {
 }
 
 .modal__wrapper {
-	width: 44%;
+	width: max(350px, 44%);
 	background-color: white;
 	border-radius: 10px;
 	position: absolute;
@@ -316,7 +329,7 @@ footer nav ul {
 	background-color: white;
 	position: absolute;
 	top: 32px;
-	right: 6%;	
+	right: 36px;	
 }
 
 .modal__closeBtn i {
@@ -338,7 +351,7 @@ footer nav ul {
 	padding: 9px 0;
 	font-size: 14px;
 	margin: 38px auto 45px auto;
-	width: 37%;
+	width: 237px;
 }
 
 .modal__minigallery {
@@ -347,7 +360,7 @@ footer nav ul {
 	grid-column-gap: 9px;
 	grid-row-gap: 29px;
 	margin: auto;
-	width: 67%;
+	width: max(330px, 67%);
 	padding: 10px 0 67px 0;
 	border-bottom: 1px solid #B3B3B3;
 }
@@ -359,7 +372,7 @@ footer nav ul {
 .minigallery__photo img {
 	width: 100%;
 	height: 100%;
-	max-height: 103px;
+	object-fit: cover;
 }
 
 .minigallery__trash {
@@ -374,9 +387,11 @@ footer nav ul {
 	align-items: center;
 	justify-content: center;
 	border: none;
+	padding: 0;
+	border-radius: 2px;
 }
-.mini-gallery__trash i {
-	font-size: 9px;
+.minigallery__trash i {
+	font-size: 11px;
 }
 
 .modal2__returntomodal1 {
@@ -384,7 +399,7 @@ footer nav ul {
 	background-color: white;
 	position: absolute;
 	top: 32px;
-	left: 7%;	
+	left: 30px;	
 }
 
 .modal2__returntomodal1 i {
@@ -393,8 +408,7 @@ footer nav ul {
 
 .modal2__form {
 	margin: 0 auto 0 auto;
-	width: 66%;
-	max-width: 420px;
+	width: max(330px, 66%);
 	padding-bottom: 47px;
 	border-bottom: 1px solid #B3B3B3;
 	text-align: left;
@@ -407,7 +421,7 @@ footer nav ul {
 	border: none;
 	box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.09);
 	width: 100%;
-	padding: 0 4%;
+	padding: 0 1em;
 	color: #444444;
 	font-family: 'Work Sans';
 	font-weight: 400;
@@ -445,13 +459,22 @@ footer nav ul {
 .photoAddition__btn {
 	border-radius: 50px;
 	background-color: #CBD6DC;
-	padding: 10px 8%;
+	padding: 10px 0;
+	width: 173px;
 	font-family: 'Work Sans';
 	font-weight: 500;
 	font-size: 14px;
 	color: #306685;
 	border: none;
 	display: block;
+	text-align: center;
+}
+
+.photoAddition__btn::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 2;
 }
 
 .photoAddition__type {
@@ -464,16 +487,18 @@ footer nav ul {
 
 .photoAddition__preview {
 	position: absolute;
-	max-width: 45%;
 	top: 0;
 	left: 50%;
 	transform: translateX(-50%);
 	height: 100%;
+	background-color: #E8F1F6;
 }
 
 .photoAddition__preview img {
-	width: 100%;
+	width: 129px;
+	padding: 0 30px;
 	height: 100%;
+	object-fit: cover;
 }
 
 .category__wrapper {
@@ -482,7 +507,7 @@ footer nav ul {
 
 .fa-chevron-down {
 	position: absolute;
-  	right: 4%;
+  	right: 1.5em;
   	top: 50%;
   	transform: translateY(-50%);
   	pointer-events: none;
