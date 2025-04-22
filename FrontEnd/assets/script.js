@@ -33,7 +33,7 @@ if (token !== null) {
     photosubmitbtn.addEventListener("click", newWorkupdate);
 }
 else {
-    filterarea.innerHTML = `<li data-catid = "all" class = "btn clicked">Tous</li>`;
+    filterarea.innerHTML = `<li data-catid="all" class="btn clicked">Tous</li>`;
     categoriesLoad();
     filterarea.addEventListener("click", categoriesfilter);
 }
@@ -58,7 +58,7 @@ async function galleryLoad() {
 //Fonction permettant de charger une photo de la gallerie et de la mini-gallerie en fonction de son titre et sa catégorie
 function loadPhoto(newTitle, newImage, newCategory, newid) {
     let photosGallery = `
-    <figure data-id = "${newid}" data-catid = "${newCategory}">
+    <figure data-id="${newid}" data-catid="${newCategory}">
         <img src="${newImage}" alt="${newTitle}">
         <figcaption>${newTitle}</figcaption>
     </figure>
