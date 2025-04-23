@@ -165,7 +165,7 @@ function editionPage() {
     const editbutton = `
         <button class="editbutton">
             <i class="fa-regular fa-pen-to-square"></i>
-            <p>modifier</p>
+            <span>modifier</span>
         </button>`;
     const project = document.querySelector("#portfolio h2");
     project.insertAdjacentHTML("afterend", editbutton);
